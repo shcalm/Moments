@@ -1,9 +1,13 @@
-from flask import jsonify, request, g, abort, url_for, current_app
+from flask import jsonify, request, g, abort, url_for, current_app, render_template
 from .. import db
 from ..models import Post, Permission
 from . import api
 from .decorators import permission_required
 from .errors import forbidden
+
+@api.route('/')
+def get_index():
+    return render_template('index.html')
 
 
 @api.route('/posts/')
