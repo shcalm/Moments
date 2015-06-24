@@ -1,7 +1,7 @@
 from flask import Flask
 from flask.ext.login import LoginManager
 from flask.ext.sqlalchemy import SQLAlchemy
-import config
+from config import config
 from flask.ext.pagedown import PageDown
 
 db = SQLAlchemy()
@@ -11,8 +11,9 @@ login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 login_manager.login_view = 'auth.login'
 
-def create_app(confi = None):
+def create_app(confi):
     app = Flask(__name__)
+    print confi
     app.config.from_object(config[confi])
     db.init_app(app)
     pagedown.init_app(app)
