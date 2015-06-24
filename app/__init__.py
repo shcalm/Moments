@@ -13,7 +13,7 @@ login_manager.login_view = 'auth.login'
 
 def create_app(confi = None):
     app = Flask(__name__)
-    app.config.from_object(config.DevelopmentConfig)
+    app.config.from_object(config[confi])
     db.init_app(app)
     pagedown.init_app(app)
     from api_1_0 import api as api_1_0_blueprint
