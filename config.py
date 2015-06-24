@@ -41,14 +41,14 @@ class TestingConfig(Config):
 
 
 class DaoCloudConfig(Config):
+    user = 'ufOtX7THzsKvlxPy'
+    passwd = 'pGgryjIfHoqsA0PSk'
+    db = 'jz8KxTCIfvFVNJLn'
+    host = os.getenv('MYSQL_PORT_3306_TCP_ADDR') or '127.0.0.1'
+    port = os.getenv('MYSQL_PORT_3306_TCP_PORT') or '3306'
+    dao_mysql = 'mysql://' + user + ':' + passwd + '@' + host + ':' + port +'/' + db
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-                              'mysql://root:123456@127.0.0.1/openfire'
-    user = 'ufOtX7THzsKvlxPy',
-    passwd = 'pGgryjIfHoqsA0PSk',
-    db = 'jz8KxTCIfvFVNJLn',
-    host = os.getenv('MYSQL_PORT_3306_TCP_ADDR'),
-    port = int(os.getenv('MYSQL_PORT_3306_TCP_PORT'))
-    dao_mysql = 'mysql://' + user + ':'+ passwd+
+                              dao_mysql
 
 
 class ProductionConfig(Config):
@@ -117,6 +117,6 @@ config = {
     'production': ProductionConfig,
     'heroku': HerokuConfig,
     'unix': UnixConfig,
-
+    'daocloud':DaoCloudConfig,
     'default': DevelopmentConfig
 }
