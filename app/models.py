@@ -178,6 +178,12 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.username
+class Class(db.Model):
+    __tablename__ = 'ofMucRoom'
+    serviceID = db.Column(db.BIGINT,primary_key=True)
+    name = db.Column(db.String(50))
+
+
 
 class Post(db.Model):
     __tablename__ = 'posts'
@@ -185,8 +191,8 @@ class Post(db.Model):
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    author_id = db.Column(db.String(64,))
-    class_id = db.Column(db.Integer)
+    author_id = db.Column(db.String(64))
+    class_id = db.Column(db.BIGINT)
 
     comments = db.relationship('Comment', backref='post', lazy='dynamic')
 
@@ -205,7 +211,7 @@ class Post(db.Model):
             'body': self.body,
             'body_html': self.body_html,
             'timestamp': self.timestamp,
-            'author': url_for('api.get_user', id=self.author_id,
+            'author': url_for('api.get_user', username=self.author_id,
                               _external=True),
             'class':url_for('api.get_class',id=self.class_id,
                             _external= True),
