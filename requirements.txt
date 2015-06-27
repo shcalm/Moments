@@ -23,4 +23,4 @@ html5lib==1.0b3
 itsdangerous==0.23
 six==1.4.1
 gunicorn==18.0
-MySQLdb
+MySQL-python
