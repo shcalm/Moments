@@ -41,14 +41,14 @@ class TestingConfig(Config):
 
 
 class DaoCloudConfig(Config):
+    DEBUG = True
     user = 'ufOtX7THzsKvlxPy'
     passwd = 'pGgryjIfHoqsA0PSk'
     db = 'jz8KxTCIfvFVNJLn'
     host = os.getenv('MYSQL_PORT_3306_TCP_ADDR') or '127.0.0.1'
     port = os.getenv('MYSQL_PORT_3306_TCP_PORT') or '3306'
     dao_mysql = 'mysql://' + user + ':' + passwd + '@' + host + ':' + port +'/' + db
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-                              dao_mysql
+    SQLALCHEMY_DATABASE_URI = dao_mysql
 
 
 class ProductionConfig(Config):
