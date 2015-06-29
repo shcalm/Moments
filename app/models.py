@@ -155,7 +155,7 @@ class Role(db.Model):
         return '<Role %r>' % self.name
 
 class User(db.Model):
-    __tablename__ = 'OfUser'
+    __tablename__ = 'ofuser'
     username = db.Column(db.String(64),primary_key = True)
     encryptedPassword = db.Column(db.String(255))
 
