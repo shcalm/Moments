@@ -4,13 +4,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from markdown import markdown
 import bleach
-from flask import current_app, request, url_for
+from flask import current_app, request, url_for, g
 from flask.ext.login import UserMixin, AnonymousUserMixin
 from app.exceptions import ValidationError
 from . import db, login_manager
-
-
-
 
 # class User(UserMixin, db.Model):
 #     __tablename__ = 'users'
@@ -178,11 +175,27 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.username
+
 class Class(db.Model):
     __tablename__ = 'ofMucRoom'
     serviceID = db.Column(db.BIGINT,primary_key=True)
     name = db.Column(db.String(50))
 
+
+post_up = db.Table('post_up',
+    db.Column('post_id', db.Integer, db.ForeignKey('posts.id')),
+    db.Column('user_id', db.String(64), db.ForeignKey('ofuser.username'))
+)
+
+
+class PostImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    img_md5 = db.Column(db.VARCHAR(255))
+
+    @staticmethod
+    def from_json(json_imgs):
+        urls = json_imgs.get('urls')
 
 
 class Post(db.Model):
@@ -191,8 +204,12 @@ class Post(db.Model):
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    author_id = db.Column(db.String(64))
-    class_id = db.Column(db.BIGINT)
+    author_id = db.Column(db.String(64),db.ForeignKey(User.username))
+    class_id = db.Column(db.BIGINT,db.ForeignKey(Class.serviceID))
+    imgs = db.relationship('PostImage',backref='imgpost',lazy='dynamic')
+
+    ups = db.relationship('User', secondary=post_up,
+        backref=db.backref('posts', lazy='dynamic'))
 
     comments = db.relationship('Comment', backref='post', lazy='dynamic')
 
@@ -206,27 +223,48 @@ class Post(db.Model):
             tags=allowed_tags, strip=True))
 
     def to_json(self):
-        json_post = {
-            'url': url_for('api.get_post', id=self.id, _external=True),
-            'body': self.body,
-            'body_html': self.body_html,
-            'timestamp': self.timestamp,
-            'author': url_for('api.get_user', username=self.author_id,
-                              _external=True),
-            'class':url_for('api.get_class',id=self.class_id,
-                            _external= True),
-            'comments': url_for('api.get_post_comments', id=self.id,
-                                _external=True),
-            'comment_count': self.comments.count()
-        }
-        return json_post
+        #json_post = {
+        #    'url': url_for('api.get_post', id=self.id, _external=True),
+        #    'body': self.body,
+        #    'body_html': self.body_html,
+        #    'timestamp': self.timestamp,
+        #    'author': url_for('api.get_user', username=self.author_id,
+        #                      _external=True),
+        #    'class':url_for('api.get_class',id=self.class_id,
+        #                    _external= True),
+        #    'comments': url_for('api.get_post_comments', id=self.id,
+        #                        _external=True),
+        #    'comment_count': self.comments.count()
+        #}
+        new_josn_post={
+            'id':self.id,
+            'content':self.body,
+            'uname':self.author_id,
+            'sendtime':self.timestamp,
+            'usericon': None,
+            'urls':[
+                img.img_md5 for img in self.imgs
+            ],
+            'firendcomment':[
+               c.to_json() for c in self.comments
+            ],
+            'firendpraise':
+                [
+                up.username for up in self.ups
+            ]
+
+       }
+        return new_josn_post
 
     @staticmethod
     def from_json(json_post):
-        body = json_post.get('body')
+        body = json_post.get('content')
+        timestamp = json_post.get('sendtime')
+        author_id = g.current_user.username
         if body is None or body == '':
             raise ValidationError('post does not have a body')
-        return Post(body=body)
+
+        return Post(body=body,timestamp=timestamp,author_id=author_id)
 
 
 db.event.listen(Post.body, 'set', Post.on_changed_body)
@@ -239,7 +277,9 @@ class Comment(db.Model):
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     disabled = db.Column(db.Boolean)
-    author_id = db.Column(db.Integer, )
+    author_id = db.Column(db.VARCHAR(64),db.ForeignKey('ofuser.username'))
+
+    replyname = db.Column(db.VARCHAR(64),db.ForeignKey('ofuser.username'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
 
     @staticmethod
@@ -251,23 +291,33 @@ class Comment(db.Model):
             tags=allowed_tags, strip=True))
 
     def to_json(self):
-        json_comment = {
-            'url': url_for('api.get_comment', id=self.id, _external=True),
-            'post': url_for('api.get_post', id=self.post_id, _external=True),
-            'body': self.body,
-            'body_html': self.body_html,
-            'timestamp': self.timestamp,
-            'author': url_for('api.get_user', id=self.author_id,
-                              _external=True),
+        #json_comment = {
+        #    'url': url_for('api.get_comment', id=self.id, _external=True),
+        #    'post': url_for('api.get_post', id=self.post_id, _external=True),
+        #    'body': self.body,
+        #    'body_html': self.body_html,
+        #    'timestamp': self.timestamp,
+        #    'author': url_for('api.get_user', id=self.author_id,
+        #                      _external=True),
+        #}
+
+        new_json_comment = {
+            'replyId':self.id,
+            'replyName':self.author_id,
+            'isReplyName':self.replyname,
+            'comment':self.body
+
         }
-        return json_comment
+        return new_json_comment
 
     @staticmethod
     def from_json(json_comment):
-        body = json_comment.get('body')
+        body = json_comment.get('comment')
         if body is None or body == '':
             raise ValidationError('comment does not have a body')
-        return Comment(body=body)
+        author_id = g.current_user.username
+        replyname = json_comment.get('isReplyName')
+        return Comment(body=body,author_id=author_id,replyname=replyname)
 
 
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)

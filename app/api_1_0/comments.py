@@ -40,16 +40,10 @@ def get_post_comments(id):
         page, per_page=current_app.config['FLASKY_COMMENTS_PER_PAGE'],
         error_out=False)
     comments = pagination.items
-    prev = None
-    if pagination.has_prev:
-        prev = url_for('api.get_comments', page=page-1, _external=True)
-    next = None
-    if pagination.has_next:
-        next = url_for('api.get_comments', page=page+1, _external=True)
+
     return jsonify({
         'posts': [comment.to_json() for comment in comments],
-        'prev': prev,
-        'next': next,
+
         'count': pagination.total
     })
 
