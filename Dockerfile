@@ -8,5 +8,5 @@ RUN pip install -r requirements.txt
 
 EXPOSE 3000
 RUN export FLASK_CONFIG=daocloud
-RNU python manage.py init_db
+RUN python manage.py init_db
 CMD [ "gunicorn","-b 0.0.0.0:3000","manage:app"]
