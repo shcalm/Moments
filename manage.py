@@ -17,8 +17,8 @@ from app import create_app, db
 from app.models import User,  Post, Comment, post_up
 from flask.ext.script import Manager, Shell
 from flask.ext.migrate import Migrate, MigrateCommand
-
-app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+flask_config_str = 'daocloud'
+app = create_app(os.getenv('FLASK_CONFIG') or flask_config_str)
 manager = Manager(app)
 
 
@@ -29,6 +29,7 @@ manager.add_command("shell", Shell(make_context=make_shell_context))
 
 @manager.command
 def init_db():
+
     db.create_all()
 
 
