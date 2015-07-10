@@ -245,10 +245,10 @@ class Post(db.Model):
             'urls':[
                 img.img_md5 for img in self.imgs
             ],
-            'firendcomment':[
+            'friendcomment':[
                c.to_json() for c in self.comments
             ],
-            'firendpraise':
+            'friendpraise':
                 [
                 up.username for up in self.ups
             ]
