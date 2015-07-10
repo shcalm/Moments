@@ -203,7 +203,7 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.now)
     author_id = db.Column(db.String(64),db.ForeignKey(User.username))
     class_id = db.Column(db.BIGINT,db.ForeignKey(Class.serviceID))
     imgs = db.relationship('PostImage',backref='imgpost',lazy='dynamic')
@@ -275,7 +275,7 @@ class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
     disabled = db.Column(db.Boolean)
     author_id = db.Column(db.VARCHAR(64),db.ForeignKey('ofuser.username'))
 
