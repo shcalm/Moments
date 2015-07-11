@@ -245,7 +245,7 @@ class Post(db.Model):
             'id':self.id,
             'content':self.body,
             'uname':self.author_id,
-            'sendtime':self.timestamp,
+            'sendtime':self.timestamp.strftime('%Y-%m-%d %H:%M'),
             'usericon': None,
             'urls':[
                 img.img_md5 for img in self.imgs
