@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from markdown import markdown
 import bleach
-from flask import current_app, request, url_for, g
+from flask import current_app, request, url_for, g, jsonify
 from flask.ext.login import UserMixin, AnonymousUserMixin
 from app.exceptions import ValidationError
 from . import db, login_manager
@@ -175,6 +175,11 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.username
+    def to_json(self):
+        return jsonify({
+            'username':self.username,
+            'usericon':None
+        })
 
 class Class(db.Model):
     __tablename__ = 'ofMucRoom'
@@ -203,7 +208,7 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.now)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
     author_id = db.Column(db.String(64),db.ForeignKey(User.username))
     class_id = db.Column(db.BIGINT,db.ForeignKey(Class.serviceID))
     imgs = db.relationship('PostImage',backref='imgpost',lazy='dynamic')
