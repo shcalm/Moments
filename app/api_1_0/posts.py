@@ -15,11 +15,12 @@ def get_index():
 def get_posts():
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config['FLASKY_POSTS_PER_PAGE']
-    total = Post.query.count()
+    #total = Post.query.count()
 
-    pagination = Post.query.paginate(
+    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
         page, per_page,error_out=False)
     posts = pagination.items
+    total = len(posts)
     #prev = None
     #if pagination.has_prev:
     #    prev = url_for('api.get_posts', page=page-1, _external=True)
@@ -34,10 +35,10 @@ def get_posts():
             'datas':[
                 post.to_json() for post in posts
             ],
-
         },
 
     })
+
 
 
 @api.route('/posts/<int:id>')
