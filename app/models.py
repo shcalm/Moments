@@ -253,8 +253,7 @@ class Post(db.Model):
             'friendcomment':[
                c.to_json() for c in self.comments
             ],
-            'friendpraise':
-                [
+            'friendpraise':[
                 up.username for up in self.ups
             ]
 
@@ -311,7 +310,6 @@ class Comment(db.Model):
             'replyName':self.author_id,
             'isReplyName':self.replyname,
             'comment':self.body
-
         }
         return new_json_comment
 

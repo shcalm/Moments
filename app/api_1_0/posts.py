@@ -90,7 +90,7 @@ def post_praise(id):
         e = post_up.insert().values(post_id=id,user_id=g.current_user.username)
         db.session.execute(e)
     else:
-        e = post_up.delete.where(post_id=id,user_id=g.current_user.username)
+        e = post_up.delete().where(post_id=id,user_id=g.current_user.username)
         post_up.execute(e)
     return jsonify({
         "status":200
