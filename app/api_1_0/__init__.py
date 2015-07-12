@@ -1,6 +1,5 @@
 from app import db
 from app.models import post_up
-from manage import app
 
 __author__ = 'songhua'
 from flask import Blueprint
@@ -15,7 +14,7 @@ def init_db():
 
 @api.route('/deldb')
 def del_post():
-    engine = db.get_engine(app)
+    engine = db.get_engine(db.get_app())
     post_up.drop(engine)
 
     return 'post_up is del'
