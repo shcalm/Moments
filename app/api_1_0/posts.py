@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import jsonify, request, g, abort, url_for, current_app, render_template
 from .. import db
 from sqlalchemy import func
@@ -83,11 +84,16 @@ def edit_post(id):
 @api.route('/posts/<int:id>/praise',methods=['POST'])
 def post_praise(id):
     #post = Post.query.get_or_404(id)
+    time = None
+    if request.json != [] and request.json != None:
+        time = request.json.get['timestamp']
+    else:
+        time = datetime.now().strftime('%Y-%m-%d %H:%M')
     sel = post_up.select((post_up.c.post_id == id) & (post_up.c.user_id ==g.current_user.username))
     rs = db.session.execute(sel).fetchall()
    # rs = sel.execute()
     if rs == []:
-        e = post_up.insert().values(post_id=id,user_id=g.current_user.username)
+        e = post_up.insert().values(post_id=id,user_id=g.current_user.username,timestamp=time)
         db.session.execute(e)
     else:
         e = post_up.delete().where(post_up.c.post_id==id and post_up.c.post_id==g.current_user.username)
