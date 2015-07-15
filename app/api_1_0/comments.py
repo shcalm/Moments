@@ -53,6 +53,8 @@ def new_post_comment(id):
     post = Post.query.get_or_404(id)
     comment = Comment.from_json(request.json)
 
+    comment.post = post
+
     db.session.add(comment)
     db.session.commit()
     return jsonify({
