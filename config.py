@@ -30,7 +30,7 @@ class Config:
 class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-        'mysql://root:123456@127.0.0.1/openfire'
+        'mysql://root:19840922@127.0.0.1/moments'
 
 
 class TestingConfig(Config):
