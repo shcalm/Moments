@@ -1,5 +1,6 @@
 from flask import jsonify, request, current_app, url_for
 from . import api
+from app import db
 from ..models import User, Post
 
 

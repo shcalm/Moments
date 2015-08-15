@@ -15,27 +15,44 @@ post_up = db.Table('post_up',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
     db.Column('timestamp',db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
 )
-class_user = db.Table('class_user',
-    db.Column('id',db.Integer,primary_key=True),
-    db.Column('class_id', db.Integer, db.ForeignKey('class_table.id')),
-    db.Column('friend_id', db.Integer, db.ForeignKey('users.id')),
-    db.Column('role',db.Integer),
-    db.Column('timestamp',db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
-)
+#class_user = db.Table('class_user',
+#    db.Column('id',db.Integer,primary_key=True),
+#    db.Column('class_id', db.Integer, db.ForeignKey('class_table.id')),
+#    db.Column('friend_id', db.Integer, db.ForeignKey('users.id')),
+#    db.Column('role',db.Integer),
+#    db.Column('timestamp',db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
+#)
+class Class_User(db.Model):
+    __tablename__ = 'classuser'
+    id = db.Column('id',db.Integer,primary_key=True)
+    class_id = db.Column('class_id', db.Integer, db.ForeignKey('class_table.id'))
+    friend_id = db.Column('friend_id', db.Integer, db.ForeignKey('users.id'))
+    role = db.Column('role',db.Integer)
+    timestamp = db.Column('timestamp',db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
 
-friend_list = db.Table('friend',
-    db.Column('id',db.Integer,primary_key=True),
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
-    db.Column('friend_id', db.Integer, db.ForeignKey('users.id')),
-    db.Column('status',db.Integer),
-    db.Column('timestamp',db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
-)
+
+class Friend_List(db.Model):
+    __tablename__ = 'friend'
+    id =  db.Column('id',db.Integer,primary_key=True)
+    user_id = db.Column('user_id', db.Integer, db.ForeignKey('users.id'))
+    friend_id = db.Column('friend_id', db.Integer, db.ForeignKey('users.id'))
+    status = db.Column('status',db.Integer)
+    timestamp = db.Column('timestamp',db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
+
+#friend_list = db.Table('friend',
+#    db.Column('id',db.Integer,primary_key=True),
+#    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+#    db.Column('friend_id', db.Integer, db.ForeignKey('users.id')),
+#    db.Column('status',db.Integer),
+#    db.Column('timestamp',db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
+#)
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(64), unique=True, index=True)
     username = db.Column(db.String(64), unique=True, index=True)
+    mobile = db.Column(db.String(64),unique=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
@@ -48,10 +65,18 @@ class User(UserMixin, db.Model):
     portrait = db.Column(db.String(128))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
 
-    comments = db.relationship('Comment', backref='author', lazy='dynamic')
+   #comments = db.relationship('Comment', backref='author', lazy='dynamic')
 
-    friendlist = db.relationship('User', secondary=friend_list,
-        backref=db.backref('befriend', lazy='dynamic'),order_by=friend_list.c.timestamp)#order_by="post_up.columns['timestamp']"
+    friendlist = db.relationship('Friend_List',foreign_keys=[Friend_List.user_id],
+        backref=db.backref('befriend', lazy='joined'),lazy='dynamic',cascade='all,delete-orphan')#order_by="post_up.columns['timestamp']"
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
 
 
     def verify_password(self, password):
@@ -112,11 +137,22 @@ class User(UserMixin, db.Model):
         db.session.add(self)
         return True
 
+    def gravatar(self, size=100, default='identicon', rating='g'):
+        pass
 
     def generate_auth_token(self, expiration):
         s = Serializer(current_app.config['SECRET_KEY'],
                        expires_in=expiration)
         return s.dumps({'id': self.id}).decode('ascii')
+
+    def add_friend(self,user):
+        if not self.is_friend(user):
+            f = Friend_List(user_id=self.id,friend_id=user.id)
+            db.session.add(f)
+
+
+    def is_friend(self,user):
+        return self.friendlist.filter_by(friend_id=user.id).first() is not None
 
     @staticmethod
     def verify_auth_token(token):
@@ -126,6 +162,15 @@ class User(UserMixin, db.Model):
         except:
             return None
         return User.query.get(data['id'])
+
+    @staticmethod
+    def from_json(data):
+        email = data.get('email')
+        username = data.get('username')
+        password = data.get('password')
+        mobile = data.get('mobile')
+        return User(email = email,username = username,password=password,mobile=mobile)
+
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -186,9 +231,10 @@ class Class(db.Model):
     max_number = db.Column(db.Integer,default=100)
     create_user_id = db.Column(db.Integer,db.ForeignKey('users.id'))
     creat_datetime = db.Column(db.DateTime,default = datetime.now().strftime('%Y-%m-%d %H:%M'))
-    classusers = db.relationship('User', secondary=class_user,
-        backref=db.backref('classes', lazy='dynamic'),order_by=class_user.c.timestamp)#order_by="post_up.columns['timestamp']"
-
+    #classusers = db.relationship('User', secondary=class_user,
+    #    backref=db.backref('classes', lazy='dynamic'),order_by=class_user.c.timestamp)#order_by="post_up.columns['timestamp']"
+    classusers = db.relationship('Class_User',foreign_keys=[Class_User.class_id],
+        backref=db.backref('beclass', lazy='joined'),lazy='dynamic',cascade='all,delete-orphan')#order_by="post_up.columns['timestamp']"
 
 
 
@@ -265,7 +311,7 @@ class Post(db.Model):
     imgs = db.relationship('PostImage',backref='imgpost',lazy='dynamic')
 
     ups = db.relationship('User', secondary=post_up,
-        backref=db.backref('posts', lazy='dynamic'),order_by=post_up.c.timestamp)#order_by="post_up.columns['timestamp']"
+        backref=db.backref('post', lazy='dynamic'),order_by=post_up.c.timestamp)#order_by="post_up.columns['timestamp']"
 
     comments = db.relationship('Comment', backref='post', lazy='dynamic',order_by=Comment.timestamp)#,order_by="comments.timestamp"
 

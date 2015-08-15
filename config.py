@@ -21,7 +21,8 @@ class Config:
     FLASKY_FOLLOWERS_PER_PAGE = 50
     FLASKY_COMMENTS_PER_PAGE = 50
     FLASKY_SLOW_DB_QUERY_TIME=0.5
-
+#os.environ.setdefault('rongcloud_app_key', app_key)
+#os.environ.setdefault('rongcloud_app_secret', app_secret)
     @staticmethod
     def init_app(app):
         pass
@@ -30,7 +31,7 @@ class Config:
 class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-        'mysql://root:19840922@127.0.0.1/moments'
+        'mysql://root:123456@127.0.0.1/moments'
 
 
 class TestingConfig(Config):
