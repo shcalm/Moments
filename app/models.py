@@ -169,7 +169,13 @@ class User(UserMixin, db.Model):
         username = data.get('username')
         password = data.get('password')
         mobile = data.get('mobile')
-        return User(email = email,username = username,password=password,mobile=mobile)
+        role = data.get("role")
+        if role is None:
+            role_id = Role.query.filter_by(name='User').first().id
+        else:
+            role_id = Role.query.filter_by(name=role).first().id
+
+        return User(email = email,username = username,password=password,mobile=mobile,role_id=role_id)
 
 
     def __repr__(self):
