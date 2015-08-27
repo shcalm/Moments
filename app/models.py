@@ -174,8 +174,11 @@ class User(UserMixin, db.Model):
             role_id = Role.query.filter_by(name='User').first().id
         else:
             role_id = Role.query.filter_by(name=role).first().id
+        avatar = data.get("avatar")
+        if avatar is None:
+            avatar = "https://avatars2.githubusercontent.com/u/1171281?v=3&s=460"
 
-        return User(email = email,username = username,password=password,mobile=mobile,role_id=role_id)
+        return User(email = email,username = username,password=password,mobile=mobile,role_id=role_id,portrait=avatar)
 
 
     def __repr__(self):
@@ -241,6 +244,16 @@ class Class(db.Model):
     #    backref=db.backref('classes', lazy='dynamic'),order_by=class_user.c.timestamp)#order_by="post_up.columns['timestamp']"
     classusers = db.relationship('Class_User',foreign_keys=[Class_User.class_id],
         backref=db.backref('beclass', lazy='joined'),lazy='dynamic',cascade='all,delete-orphan')#order_by="post_up.columns['timestamp']"
+
+    @staticmethod
+    def from_json(json_data):
+        name = json_data.get('name')
+        portrait = json_data.get('portrait')
+       # number = json_data.get('number')
+        create_user_id = g.current_user.id
+        creat_datetime = json_data.get('datetime')
+        return Class(name=name,portrait=portrait,create_user_id=create_user_id,creat_datetime=creat_datetime)
+
 
 
 

@@ -86,7 +86,7 @@ def post_praise(id):
     #post = Post.query.get_or_404(id)
     time = None
     if request.json != [] and request.json != None:
-        time = request.json.get['timestamp']
+        time = request.json.get('timestamp')
     else:
         time = datetime.now().strftime('%Y-%m-%d %H:%M')
     sel = post_up.select((post_up.c.post_id == id) & (post_up.c.user_id ==g.current_user.username))

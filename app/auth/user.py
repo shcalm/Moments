@@ -62,8 +62,8 @@ def auth_error():
 @basicauth.login_required
 def get_token():
     user = g.current_user
-    result = client.user_get_token(user_id=user.id,name=user.username)
-    if result[u'code'] == 200 and result[u'userId'] == user.id:
+    result = client.user_get_token(user_id=user.id,name=user.username,portrait_uri= user.portrait)
+    if result[u'code'] == 200 and result[u'userId'] == str(user.id):
         return result[u'token']
     else:
         return '-1'
