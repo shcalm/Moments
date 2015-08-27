@@ -1,8 +1,9 @@
+import json
 from flask import request, jsonify, g
 from flask_httpauth import HTTPBasicAuth
 from .. import db, client
 from . import auth
-from ..models import User
+from ..models import User, Class
 
 basicauth = HTTPBasicAuth()
 
@@ -23,9 +24,18 @@ def email_login():
     password = request.json.get('password')
 
     user = User.query.filter_by(email = email).first()
-    if user:
+    if user is not None:
         if user.verify_password(password):
             g.current_user = user
+            clslist = user.classlist
+            clsmap = {}
+            for cls in clslist:
+                clsmap[cls.class_id] = Class.quer.filter_by(id=cls.class_id).first().name
+
+            result = client.group_sync(
+                user_id=user.id,
+                groups=json.dump(clsmap)
+            )
             return jsonify({
                 'result': '200',
                 'id': user.id

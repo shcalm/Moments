@@ -4,7 +4,6 @@ from app import client, db
 from app.api_1_0 import api
 from app.models import Comment, Class, User, Class_User
 
-
 def send_request_to_admin(id_from, id_to):
     return  client.message_system_publish(
         from_user_id=id_from,
@@ -14,9 +13,17 @@ def send_request_to_admin(id_from, id_to):
         push_content='send enroll request',
         push_data='send enroll request')
 
-@api.route('/class/search/<id>')
-def search_class(id):
-    cls = Class.query.filter_by(id=id)
+
+@api.route('/class/search')
+def search_class():
+    id = request.args.get('id')
+    name = request.args.get('name')
+    if id is not None:
+        cls = Class.query.filter_by(id=id)
+    else:
+        if name is not None:
+            cls = Class.query.filter(Class.name.like("%name%")).first()
+
     user = g.current_user
 
     if cls is not None:
@@ -31,6 +38,8 @@ def search_class(id):
         return jsonify({
             'status': 401
         })
+
+
 
 
 @api.route('/class/<id>')
@@ -74,18 +83,36 @@ def enroll():
 def confirm_enroll(id):
     class_id = request.get_json()['class_id']
     userid = request.get_json()['user_id']
-    user = User.query.filter_by(id = userid).first()
+    user = User.query.filter_by(id=userid).first()
     if user is not None:
-        sel = Class_User.select(Class_User.friend_id==user.id & Class_User.class_id == class_id)
+        sel = Class_User.select(Class_User.friend_id == user.id & Class_User.class_id == class_id)
         rs = db.session.execute(sel).fetchall()
         if rs == []:
-            e = Class_User.insert().values(friend_id=userid,class_id=class_id)
+            e = Class_User.insert().values(friend_id=userid, class_id=class_id)
             db.session.execute(e)
+
+            result = client.group_join(
+                user_id_list=[userid],
+                group_id=class_id,
+                group_name=Class.query.filter_by(id=class_id).first().name
+            )
+            if result[u'code'] == 200:
+                 client.message_system_publish(
+                    from_user_id=g.current_user.id,
+                    to_user_id=userid,
+                    object_name='RC:TxtMsg',
+                    content=json.dumps({"content":"confirm"}),
+                    push_content='confirm',
+                    push_data='confirm')
+            else:
+                return jsonify({
+                    "status": result[u'code'],
+                })
         else:
             return jsonify({
-                "status":408,
-                "message":"has enroll in"
-            })
+            "status": 408,
+            "message": "has enroll in"
+        })
 
 @api.route('/class/create', methods=['POST', 'GET'])
 def create_class():
@@ -94,10 +121,20 @@ def create_class():
     db.session.add(cls)
     db.session.commit()
 
-    return jsonify({
-        'status': 200,
-        'id': cls.id
-    })
+    result = client.group_create(
+        user_id_list=[g.current_user.id],
+        group_id=cls.id,
+        group_name=cls.name
+    )
+    if result[u'code'] == 200:
+        return jsonify({
+            'status': 200,
+            'id': cls.id
+        })
+    else:
+        return jsonify({
+            'status':result[u'code']
+        })
 
 
 def find_admin():

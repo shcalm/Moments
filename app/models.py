@@ -70,6 +70,9 @@ class User(UserMixin, db.Model):
     friendlist = db.relationship('Friend_List',foreign_keys=[Friend_List.user_id],
         backref=db.backref('befriend', lazy='joined'),lazy='dynamic',cascade='all,delete-orphan')#order_by="post_up.columns['timestamp']"
 
+    classlist = db.relationship('Class_User',foreign_keys=[Class_User.friend_id],
+        backref=db.backref('beuser', lazy='joined'),lazy='dynamic',cascade='all,delete-orphan')#order_by="post_up.columns['timestamp']"
+
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
@@ -174,11 +177,12 @@ class User(UserMixin, db.Model):
             role_id = Role.query.filter_by(name='User').first().id
         else:
             role_id = Role.query.filter_by(name=role).first().id
+
         avatar = data.get("avatar")
         if avatar is None:
             avatar = "https://avatars2.githubusercontent.com/u/1171281?v=3&s=460"
-
         return User(email = email,username = username,password=password,mobile=mobile,role_id=role_id,portrait=avatar)
+
 
 
     def __repr__(self):
@@ -252,9 +256,8 @@ class Class(db.Model):
        # number = json_data.get('number')
         create_user_id = g.current_user.id
         creat_datetime = json_data.get('datetime')
+        introduce = json_data.get('introduce')
         return Class(name=name,portrait=portrait,create_user_id=create_user_id,creat_datetime=creat_datetime)
-
-
 
 
 class PostImage(db.Model):
