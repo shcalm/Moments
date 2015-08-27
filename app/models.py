@@ -256,8 +256,10 @@ class Class(db.Model):
        # number = json_data.get('number')
         create_user_id = g.current_user.id
         creat_datetime = json_data.get('datetime')
+        if creat_datetime is None:
+            creat_datetime = datetime.now().strftime('%Y-%m-%d %H:%M')
         introduce = json_data.get('introduce')
-        return Class(name=name,portrait=portrait,create_user_id=create_user_id,creat_datetime=creat_datetime)
+        return Class(name=name,portrait=portrait,create_user_id=create_user_id,creat_datetime=creat_datetime,introduce=introduce)
 
 
 class PostImage(db.Model):

@@ -22,7 +22,7 @@ def search_class():
         cls = Class.query.filter_by(id=id)
     else:
         if name is not None:
-            cls = Class.query.filter(Class.name.like("%name%")).first()
+            cls = Class.query.filter(Class.name.like("%"+name+"%")).first()
 
     user = g.current_user
 
@@ -48,7 +48,7 @@ def get_class(id):
 
 
 @api.route('/class/enroll/<id>', methods=['POST', 'GET'])
-def enroll():
+def enroll(id):
     cls = Class.query.filter_by(id=id).first()
     if cls is not None:
         admin = cls.create_user_id
@@ -80,16 +80,17 @@ def enroll():
    #     db.session.execute(e)
 
 @api.route('/class/confirm',methods=['POST','GET'])
-def confirm_enroll(id):
+def confirm_enroll():
     class_id = request.get_json()['class_id']
     userid = request.get_json()['user_id']
     user = User.query.filter_by(id=userid).first()
     if user is not None:
-        sel = Class_User.select(Class_User.friend_id == user.id & Class_User.class_id == class_id)
-        rs = db.session.execute(sel).fetchall()
-        if rs == []:
-            e = Class_User.insert().values(friend_id=userid, class_id=class_id)
-            db.session.execute(e)
+       # sel = Class_User.select(Class_User.friend_id == user.id & Class_User.class_id == class_id)
+        cls_usr = Class_User.query.filter_by(friend_id = userid , class_id = class_id).first()
+        if cls_usr is None:
+            cls_usr = Class_User(friend_id=userid,class_id=class_id)
+            db.session.add(cls_usr)
+            db.session.commit()
 
             result = client.group_join(
                 user_id_list=[userid],
