@@ -182,6 +182,21 @@ class User(UserMixin, db.Model):
         if avatar is None:
             avatar = "https://avatars2.githubusercontent.com/u/1171281?v=3&s=460"
         return User(email = email,username = username,password=password,mobile=mobile,role_id=role_id,portrait=avatar)
+    @staticmethod
+    def from_form(form):
+        email = form.get('email')
+        username = form.get('username')
+        password = form.get('password')
+        mobile = form.get('mobile')
+        role = form.get("role",default='User')
+        if role is None:
+            role_id = Role.query.filter_by(name='User').first().id
+        else:
+            role_id = Role.query.filter_by(name=role).first().id
+
+        avatar = form.get("avatar",default='https://avatars2.githubusercontent.com/u/1171281?v=3&s=460')
+
+        return User(email = email,username = username,password=password,mobile=mobile,role_id=role_id,portrait=avatar)
 
 
 
@@ -259,6 +274,15 @@ class Class(db.Model):
         if creat_datetime is None:
             creat_datetime = datetime.now().strftime('%Y-%m-%d %H:%M')
         introduce = json_data.get('introduce')
+        return Class(name=name,portrait=portrait,create_user_id=create_user_id,creat_datetime=creat_datetime,introduce=introduce)
+    @staticmethod
+    def from_form(form):
+        name = form.get('name')
+        portrait = form.get('portrait')
+       # number = json_data.get('number')
+        create_user_id = g.current_user.id
+        creat_datetime = form.get('datetime',datetime.now().strftime('%Y-%m-%d %H:%M'))
+        introduce = form.get('introduce')
         return Class(name=name,portrait=portrait,create_user_id=create_user_id,creat_datetime=creat_datetime,introduce=introduce)
 
 

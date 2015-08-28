@@ -9,7 +9,8 @@ basicauth = HTTPBasicAuth()
 
 @auth.route('/reg',methods=['POST','GET'])
 def register_user():
-    user = User.from_json(request.json)
+
+    user = User.from_form(request.form)
     db.session.add(user)
     db.session.commit()
     return jsonify({
@@ -20,8 +21,8 @@ def register_user():
 
 @auth.route('/email_login', methods=['POST', 'GET'])
 def email_login():
-    email = request.json.get('email')
-    password = request.json.get('password')
+    email = request.form.get('email')
+    password = request.form.get('password')
 
     user = User.query.filter_by(email = email).first()
     if user is not None:

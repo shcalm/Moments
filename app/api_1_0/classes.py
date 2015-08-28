@@ -16,8 +16,8 @@ def send_request_to_admin(id_from, id_to):
 
 @api.route('/class/search')
 def search_class():
-    id = request.args.get('id')
-    name = request.args.get('name')
+    id = request.form.get('id')
+    name = request.form.get('name')
     if id is not None:
         cls = Class.query.filter_by(id=id)
     else:
@@ -81,8 +81,8 @@ def enroll(id):
 
 @api.route('/class/confirm',methods=['POST','GET'])
 def confirm_enroll():
-    class_id = request.get_json()['class_id']
-    userid = request.get_json()['user_id']
+    class_id = request.form.get('class_id')
+    userid = request.form.get('user_id')
     user = User.query.filter_by(id=userid).first()
     if user is not None:
        # sel = Class_User.select(Class_User.friend_id == user.id & Class_User.class_id == class_id)
@@ -117,8 +117,8 @@ def confirm_enroll():
 
 @api.route('/class/create', methods=['POST', 'GET'])
 def create_class():
-    data = request.json
-    cls = Class.from_json(data)
+    data = request.form
+    cls = Class.from_form(data)
     db.session.add(cls)
     db.session.commit()
 
