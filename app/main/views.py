@@ -1,7 +1,7 @@
 from . import main
 from flask import render_template
 from app import db
-
+from app.models import Role
 @main.route('/')
 def index():
 	return render_template('index.html')
@@ -9,6 +9,7 @@ def index():
 @main.route('/initdb')
 def init_db():
     db.create_all()
+    Role.insert_roles()
     return 'db is inited'
 
 @main.route('/deldb')
