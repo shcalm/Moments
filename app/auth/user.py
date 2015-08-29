@@ -9,7 +9,6 @@ basicauth = HTTPBasicAuth()
 
 @auth.route('/reg',methods=['POST','GET'])
 def register_user():
-
     user = User.from_form(request.form)
     db.session.add(user)
     db.session.commit()
@@ -31,12 +30,12 @@ def email_login():
             clslist = user.classlist
             clsmap = {}
             for cls in clslist:
-                clsmap[cls.class_id] = Class.quer.filter_by(id=cls.class_id).first().name
-
-            result = client.group_sync(
-                user_id=user.id,
-                groups=json.dump(clsmap)
-            )
+                clsmap[cls.class_id] = Class.query.filter_by(id=cls.class_id).first().name
+            if clsmap != {}:
+                result = client.group_sync(
+                    user_id=user.id,
+                    groups=clsmap
+                )
             return jsonify({
                 'result': '200',
                 'id': user.id

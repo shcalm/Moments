@@ -122,6 +122,10 @@ def create_class():
     db.session.add(cls)
     db.session.commit()
 
+    cls_usr = Class_User(friend_id=g.current_user.id,class_id=cls.id)
+    db.session.add(cls_usr)
+    db.session.commit()
+
     result = client.group_create(
         user_id_list=[g.current_user.id],
         group_id=cls.id,
