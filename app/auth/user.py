@@ -11,7 +11,14 @@ basicauth = HTTPBasicAuth()
 def register_user():
     user = User.from_form(request.form)
     db.session.add(user)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception,ex:
+        print ex
+        db.session.rollback()
+        return jsonify({
+            'result':'400'
+        })
     return jsonify({
         'result':'200',
         'id':user.id
