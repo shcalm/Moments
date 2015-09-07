@@ -7,21 +7,22 @@ from ..models import User, Class
 
 basicauth = HTTPBasicAuth()
 
-@auth.route('/reg',methods=['POST','GET'])
+
+@auth.route('/reg', methods=['POST', 'GET'])
 def register_user():
     user = User.from_form(request.form)
     db.session.add(user)
     try:
         db.session.commit()
-    except Exception,ex:
+    except Exception, ex:
         print ex
         db.session.rollback()
         return jsonify({
-            'result':'400'
+            'result': '400'
         })
     return jsonify({
-        'result':'200',
-        'id':user.id
+        'result': '200',
+        'id': user.id
     })
 
 
@@ -30,7 +31,7 @@ def email_login():
     email = request.form.get('email')
     password = request.form.get('password')
 
-    user = User.query.filter_by(email = email).first()
+    user = User.query.filter_by(email=email).first()
     if user is not None:
         if user.verify_password(password):
             g.current_user = user
@@ -49,8 +50,37 @@ def email_login():
             })
 
     return jsonify({
-                'result': '401',
+        'result': '401',
+    })
+
+
+@auth.route('/username_login', methods=['POST', 'GET'])
+def username_login():
+    name = request.form.get('username')
+    password = request.form.get('password')
+
+    user = User.query.filter_by(username=name).first()
+    if user is not None:
+        if user.verify_password(password):
+            g.current_user = user
+            clslist = user.classlist
+            clsmap = {}
+            for cls in clslist:
+                clsmap[cls.class_id] = Class.query.filter_by(id=cls.class_id).first().name
+            if clsmap != {}:
+                result = client.group_sync(
+                    user_id=user.id,
+                    groups=clsmap
+                )
+            return jsonify({
+                'result': '200',
+                'id': user.id
             })
+
+    return jsonify({
+        'result': '401',
+    })
+
 
 @basicauth.verify_password
 def verify_password(username_or_token, password):
@@ -69,17 +99,19 @@ def verify_password(username_or_token, password):
 
     return user.verify_password(password)
 
+
 @basicauth.error_handler
 def auth_error():
     response = jsonify({'error': 'unauthorized', 'message': 'Invalid credentials'})
     response.status_code = 401
     return response
 
+
 @auth.route('/token')
 @basicauth.login_required
 def get_token():
     user = g.current_user
-    result = client.user_get_token(user_id=user.id,name=user.username,portrait_uri= user.portrait)
+    result = client.user_get_token(user_id=user.id, name=user.username, portrait_uri=user.portrait)
     if result[u'code'] == 200 and result[u'userId'] == str(user.id):
         return result[u'token']
     else:
