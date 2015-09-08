@@ -10,7 +10,7 @@ def send_request_to_admin(id_from, id_to):
         from_user_id=id_from,
         to_user_id=id_to,
         object_name='RC:ContactNtf',
-        content=json.dumps({"content": "send request", 'id': id_from}),
+        content=json.dumps({"message": "send request", "sourceUserId":id_from,"targetUserId":id_to,"operation":"add"}),
         push_content='send enroll request',
         push_data='send enroll request')
 
@@ -102,7 +102,7 @@ def confirm_enroll():
                     from_user_id=g.current_user.id,
                     to_user_id=userid,
                     object_name='RC:ContactNtf',
-                    content=json.dumps({"content": "confirm"}),
+                    content=json.dumps({"message": "confirm"}),
                     push_content='confirm',
                     push_data='confirm')
             else:
