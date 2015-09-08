@@ -72,7 +72,7 @@ def get_user_groups():
         return jsonify({
             'status': 200,
             'groups': [
-                c.id for c in user.classlist
+                c.to_json() for c in user.classlist
                 ]
         })
     else:
