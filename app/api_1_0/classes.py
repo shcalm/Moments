@@ -5,12 +5,12 @@ from app.api_1_0 import api
 from app.models import Comment, Class, User, Class_User
 
 
-def send_request_to_admin(id_from, id_to):
+def send_request_to_admin(id_from, id_to,classid):
     return client.message_system_publish(
         from_user_id=id_from,
         to_user_id=id_to,
         object_name='RC:ContactNtf',
-        content=json.dumps({"message": "send request", "sourceUserId":id_from,"targetUserId":id_to,"operation":"add"}),
+        content=json.dumps({"message": "send request", "sourceUserId":id_from,"targetUserId":id_to,"operation":"add","extra":classid}),
         push_content='send enroll request',
         push_data='send enroll request')
 
@@ -51,7 +51,7 @@ def enroll(id):
     cls = Class.query.filter_by(id=id).first()
     if cls is not None:
         admin = cls.create_user_id
-        result = send_request_to_admin(g.current_user.id, admin)
+        result = send_request_to_admin(g.current_user.id, admin,id)
         if result[u'code'] == 200:
             return jsonify({
                 'status': 200,
@@ -97,14 +97,15 @@ def confirm_enroll():
                 group_id=class_id,
                 group_name=Class.query.filter_by(id=class_id).first().name
             )
-            if result[u'code'] == 200:
+            if result[u'code'] == 200: 
                 client.message_system_publish(
                     from_user_id=g.current_user.id,
-                    to_user_id=userid,
+                    to_group_id=class_id,
                     object_name='RC:ContactNtf',
                     content=json.dumps({"message": "confirm"}),
                     push_content='confirm',
-                    push_data='confirm')
+                    push_data='confirm',
+                    extra=class_id)
             else:
                 return jsonify({
                     "status": result[u'code'],
