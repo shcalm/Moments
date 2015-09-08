@@ -9,50 +9,52 @@ from flask.ext.login import UserMixin, AnonymousUserMixin
 from app.exceptions import ValidationError
 from . import db, login_manager
 
-
 post_up = db.Table('post_up',
-    db.Column('post_id', db.Integer, db.ForeignKey('posts.id')),
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
-    db.Column('timestamp',db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
-)
-#class_user = db.Table('class_user',
+                   db.Column('post_id', db.Integer, db.ForeignKey('posts.id')),
+                   db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+                   db.Column('timestamp', db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
+                   )
+
+
+# class_user = db.Table('class_user',
 #    db.Column('id',db.Integer,primary_key=True),
 #    db.Column('class_id', db.Integer, db.ForeignKey('class_table.id')),
 #    db.Column('friend_id', db.Integer, db.ForeignKey('users.id')),
 #    db.Column('role',db.Integer),
 #    db.Column('timestamp',db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
-#)
+# )
 class Class_User(db.Model):
     __tablename__ = 'classuser'
-    id = db.Column('id',db.Integer,primary_key=True)
+    id = db.Column('id', db.Integer, primary_key=True)
     class_id = db.Column('class_id', db.Integer, db.ForeignKey('class_table.id'))
     friend_id = db.Column('friend_id', db.Integer, db.ForeignKey('users.id'))
-    role = db.Column('role',db.Integer)
-    timestamp = db.Column('timestamp',db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
+    role = db.Column('role', db.Integer)
+    timestamp = db.Column('timestamp', db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
 
 
 class Friend_List(db.Model):
     __tablename__ = 'friend'
-    id =  db.Column('id',db.Integer,primary_key=True)
+    id = db.Column('id', db.Integer, primary_key=True)
     user_id = db.Column('user_id', db.Integer, db.ForeignKey('users.id'))
     friend_id = db.Column('friend_id', db.Integer, db.ForeignKey('users.id'))
-    status = db.Column('status',db.Integer)
-    timestamp = db.Column('timestamp',db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
+    status = db.Column('status', db.Integer)
+    timestamp = db.Column('timestamp', db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
 
-#friend_list = db.Table('friend',
+
+# friend_list = db.Table('friend',
 #    db.Column('id',db.Integer,primary_key=True),
 #    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
 #    db.Column('friend_id', db.Integer, db.ForeignKey('users.id')),
 #    db.Column('status',db.Integer),
 #    db.Column('timestamp',db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
-#)
+# )
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(64), unique=True, index=True)
     username = db.Column(db.String(64), unique=True, index=True)
-    mobile = db.Column(db.String(64),unique=True)
+    mobile = db.Column(db.String(64), unique=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
@@ -65,13 +67,15 @@ class User(UserMixin, db.Model):
     portrait = db.Column(db.String(128))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
 
-   #comments = db.relationship('Comment', backref='author', lazy='dynamic')
+    # comments = db.relationship('Comment', backref='author', lazy='dynamic')
 
-    friendlist = db.relationship('Friend_List',foreign_keys=[Friend_List.user_id],
-        backref=db.backref('befriend', lazy='joined'),lazy='dynamic',cascade='all,delete-orphan')#order_by="post_up.columns['timestamp']"
+    friendlist = db.relationship('Friend_List', foreign_keys=[Friend_List.user_id],
+                                 backref=db.backref('befriend', lazy='joined'), lazy='dynamic',
+                                 cascade='all,delete-orphan')  # order_by="post_up.columns['timestamp']"
 
-    classlist = db.relationship('Class_User',foreign_keys=[Class_User.friend_id],
-        backref=db.backref('beuser', lazy='joined'),lazy='dynamic',cascade='all,delete-orphan')#order_by="post_up.columns['timestamp']"
+    classlist = db.relationship('Class_User', foreign_keys=[Class_User.friend_id],
+                                backref=db.backref('beuser', lazy='joined'), lazy='dynamic',
+                                cascade='all,delete-orphan')  # order_by="post_up.columns['timestamp']"
 
     @property
     def password(self):
@@ -80,7 +84,6 @@ class User(UserMixin, db.Model):
     @password.setter
     def password(self, password):
         self.password_hash = generate_password_hash(password)
-
 
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -148,13 +151,12 @@ class User(UserMixin, db.Model):
                        expires_in=expiration)
         return s.dumps({'id': self.id}).decode('ascii')
 
-    def add_friend(self,user):
+    def add_friend(self, user):
         if not self.is_friend(user):
-            f = Friend_List(user_id=self.id,friend_id=user.id)
+            f = Friend_List(user_id=self.id, friend_id=user.id)
             db.session.add(f)
 
-
-    def is_friend(self,user):
+    def is_friend(self, user):
         return self.friendlist.filter_by(friend_id=user.id).first() is not None
 
     @staticmethod
@@ -181,24 +183,33 @@ class User(UserMixin, db.Model):
         avatar = data.get("avatar")
         if avatar is None:
             avatar = "https://avatars2.githubusercontent.com/u/1171281?v=3&s=460"
-        return User(email = email,username = username,password=password,mobile=mobile,role_id=role_id,portrait=avatar)
+        return User(email=email, username=username, password=password, mobile=mobile, role_id=role_id, portrait=avatar)
+
     @staticmethod
     def from_form(form):
         email = form.get('email')
         username = form.get('username')
         password = form.get('password')
         mobile = form.get('mobile')
-        role = form.get("role",default='User')
+        role = form.get("role", default='User')
         if role is None:
             role_id = Role.query.filter_by(name='User').first().id
         else:
             role_id = Role.query.filter_by(name=role).first().id
 
-        avatar = form.get("avatar",default='https://avatars2.githubusercontent.com/u/1171281?v=3&s=460')
+        avatar = form.get("avatar", default='https://avatars2.githubusercontent.com/u/1171281?v=3&s=460')
 
-        return User(email = email,username = username,password=password,mobile=mobile,role_id=role_id,portrait=avatar)
+        return User(email=email, username=username, password=password, mobile=mobile, role_id=role_id, portrait=avatar)
 
-
+    def to_json(self):
+        json_user = {
+            "id": self.id,
+            "email": self.email,
+            "username": self.username,
+            "name": self.name,
+            "portrait": self.portrait
+        }
+        return json_user
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -216,13 +227,14 @@ class Permission:
     MODERATE_COMMENTS = 0x08
     ADMINISTER = 0x80
 
+
 class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
     default = db.Column(db.Boolean, default=False, index=True)
     permissions = db.Column(db.Integer)
-   # users = db.relationship('User', backref='role', lazy='dynamic')
+    # users = db.relationship('User', backref='role', lazy='dynamic')
 
     @staticmethod
     def insert_roles():
@@ -251,39 +263,52 @@ class Role(db.Model):
 
 class Class(db.Model):
     __tablename__ = 'class_table'
-    id = db.Column(db.Integer,primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     portrait = db.Column(db.VARCHAR(128))
     introduce = db.Column(db.VARCHAR(256))
-    number = db.Column(db.Integer,default=1)
-    max_number = db.Column(db.Integer,default=100)
-    create_user_id = db.Column(db.Integer,db.ForeignKey('users.id'))
-    creat_datetime = db.Column(db.DateTime,default = datetime.now().strftime('%Y-%m-%d %H:%M'))
-    #classusers = db.relationship('User', secondary=class_user,
+    number = db.Column(db.Integer, default=1)
+    max_number = db.Column(db.Integer, default=100)
+    create_user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    creat_datetime = db.Column(db.DateTime, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
+    # classusers = db.relationship('User', secondary=class_user,
     #    backref=db.backref('classes', lazy='dynamic'),order_by=class_user.c.timestamp)#order_by="post_up.columns['timestamp']"
-    classusers = db.relationship('Class_User',foreign_keys=[Class_User.class_id],
-        backref=db.backref('beclass', lazy='joined'),lazy='dynamic',cascade='all,delete-orphan')#order_by="post_up.columns['timestamp']"
+    classusers = db.relationship('Class_User', foreign_keys=[Class_User.class_id],
+                                 backref=db.backref('beclass', lazy='joined'), lazy='dynamic',
+                                 cascade='all,delete-orphan')  # order_by="post_up.columns['timestamp']"
 
     @staticmethod
     def from_json(json_data):
         name = json_data.get('name')
         portrait = json_data.get('portrait')
-       # number = json_data.get('number')
+        # number = json_data.get('number')
         create_user_id = g.current_user.id
         creat_datetime = json_data.get('datetime')
         if creat_datetime is None:
             creat_datetime = datetime.now().strftime('%Y-%m-%d %H:%M')
         introduce = json_data.get('introduce')
-        return Class(name=name,portrait=portrait,create_user_id=create_user_id,creat_datetime=creat_datetime,introduce=introduce)
+        return Class(name=name, portrait=portrait, create_user_id=create_user_id, creat_datetime=creat_datetime,
+                     introduce=introduce)
+
     @staticmethod
     def from_form(form):
         name = form.get('name')
         portrait = form.get('portrait')
-       # number = json_data.get('number')
+        # number = json_data.get('number')
         create_user_id = g.current_user.id
-        creat_datetime = form.get('datetime',datetime.now().strftime('%Y-%m-%d %H:%M'))
+        creat_datetime = form.get('datetime', datetime.now().strftime('%Y-%m-%d %H:%M'))
         introduce = form.get('introduce')
-        return Class(name=name,portrait=portrait,create_user_id=create_user_id,creat_datetime=creat_datetime,introduce=introduce)
+        return Class(name=name, portrait=portrait, create_user_id=create_user_id, creat_datetime=creat_datetime,
+                     introduce=introduce)
+
+    def to_json(self):
+        cls_json = {
+            'id': self.id,
+            'portrait': self.portrait,
+            'name': self.name,
+            'introduce': self.introduce,
+        }
+        return cls_json
 
 
 class PostImage(db.Model):
@@ -303,9 +328,9 @@ class Comment(db.Model):
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M'))
     disabled = db.Column(db.Boolean)
-    author_id = db.Column(db.Integer,db.ForeignKey('users.id'))
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    replyname = db.Column(db.Integer,db.ForeignKey('users.id'))
+    replyname = db.Column(db.Integer, db.ForeignKey('users.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
 
     @staticmethod
@@ -317,7 +342,7 @@ class Comment(db.Model):
             tags=allowed_tags, strip=True))
 
     def to_json(self):
-        #json_comment = {
+        # json_comment = {
         #    'url': url_for('api.get_comment', id=self.id, _external=True),
         #    'post': url_for('api.get_post', id=self.post_id, _external=True),
         #    'body': self.body,
@@ -325,13 +350,13 @@ class Comment(db.Model):
         #    'timestamp': self.timestamp,
         #    'author': url_for('api.get_user', id=self.author_id,
         #                      _external=True),
-        #}
+        # }
 
         new_json_comment = {
-            'replyId':self.id,
-            'replyName':self.author_id,
-            'isReplyName':self.replyname,
-            'comment':self.body
+            'replyId': self.id,
+            'replyName': self.author_id,
+            'isReplyName': self.replyname,
+            'comment': self.body
         }
         return new_json_comment
 
@@ -342,7 +367,7 @@ class Comment(db.Model):
             raise ValidationError('comment does not have a body')
         author_id = g.current_user.id
         replyname = json_comment.get('isReplyName')
-        return Comment(body=body,author_id=author_id,replyname=replyname)
+        return Comment(body=body, author_id=author_id, replyname=replyname)
 
 
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)
@@ -354,14 +379,16 @@ class Post(db.Model):
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-    author_id = db.Column(db.Integer,db.ForeignKey(User.id))
-    class_id = db.Column(db.Integer,db.ForeignKey(Class.id))
-    imgs = db.relationship('PostImage',backref='imgpost',lazy='dynamic')
+    author_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    class_id = db.Column(db.Integer, db.ForeignKey(Class.id))
+    imgs = db.relationship('PostImage', backref='imgpost', lazy='dynamic')
 
     ups = db.relationship('User', secondary=post_up,
-        backref=db.backref('post', lazy='dynamic'),order_by=post_up.c.timestamp)#order_by="post_up.columns['timestamp']"
+                          backref=db.backref('post', lazy='dynamic'),
+                          order_by=post_up.c.timestamp)  # order_by="post_up.columns['timestamp']"
 
-    comments = db.relationship('Comment', backref='post', lazy='dynamic',order_by=Comment.timestamp)#,order_by="comments.timestamp"
+    comments = db.relationship('Comment', backref='post', lazy='dynamic',
+                               order_by=Comment.timestamp)  # ,order_by="comments.timestamp"
 
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
@@ -373,7 +400,7 @@ class Post(db.Model):
             tags=allowed_tags, strip=True))
 
     def to_json(self):
-        #json_post = {
+        # json_post = {
         #    'url': url_for('api.get_post', id=self.id, _external=True),
         #    'body': self.body,
         #    'body_html': self.body_html,
@@ -385,24 +412,24 @@ class Post(db.Model):
         #    'comments': url_for('api.get_post_comments', id=self.id,
         #                        _external=True),
         #    'comment_count': self.comments.count()
-        #}
-        new_josn_post={
-            'id':self.id,
-            'content':self.body,
-            'uname':self.author_id,
-            'sendtime':self.timestamp.strftime('%Y-%m-%d %H:%M'),
+        # }
+        new_josn_post = {
+            'id': self.id,
+            'content': self.body,
+            'uname': self.author_id,
+            'sendtime': self.timestamp.strftime('%Y-%m-%d %H:%M'),
             'usericon': None,
-            'urls':[
+            'urls': [
                 img.img_md5 for img in self.imgs
-            ],
-            'friendcomment':[
-               c.to_json() for c in self.comments
-            ],
-            'friendpraise':[
+                ],
+            'friendcomment': [
+                c.to_json() for c in self.comments
+                ],
+            'friendpraise': [
                 up.user_id for up in self.ups
-            ]
+                ]
 
-       }
+        }
         return new_josn_post
 
     @staticmethod
@@ -413,9 +440,7 @@ class Post(db.Model):
         if body is None or body == '':
             raise ValidationError('post does not have a body')
 
-        return Post(body=body,timestamp=timestamp,author_id=author_id)
+        return Post(body=body, timestamp=timestamp, author_id=author_id)
 
 
 db.event.listen(Post.body, 'set', Post.on_changed_body)
-
-
