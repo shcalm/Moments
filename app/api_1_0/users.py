@@ -48,9 +48,10 @@ def get_user_posts(username):
     })
 
 
-@api.route('/users/getmyfriends/<id>')
-def get_user_friends(id):
-    user = User.query.filter_by(id=id).first()
+@api.route('/users/getmyfriends')
+def get_user_friends():
+    
+    user = g.current_user
     if user is not None:
         return jsonify({
             'status': 200,
@@ -64,9 +65,9 @@ def get_user_friends(id):
         })
 
 
-@api.route('/users/getmygroups/<id>')
-def get_user_groups(id):
-    user = User.query.filter_by(id=id).first()
+@api.route('/users/getmygroups')
+def get_user_groups():
+    user = g.current_user
     if user is not None:
         return jsonify({
             'status': 200,
