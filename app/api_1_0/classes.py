@@ -106,6 +106,9 @@ def confirm_enroll():
                     push_content='confirm',
                     push_data='confirm',
                     extra=class_id)
+                return jsonify({
+                    "status":200
+                })
             else:
                 return jsonify({
                     "status": result[u'code'],
@@ -115,6 +118,10 @@ def confirm_enroll():
                 "status": 408,
                 "message": "has enroll in"
             })
+    else:
+        return jsonify({
+            "status":404
+        })
 
 
 @api.route('/class/create', methods=['POST', 'GET'])
