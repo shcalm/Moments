@@ -2,7 +2,7 @@ import json
 from flask import jsonify, request, current_app, url_for, g
 from . import api
 from app import db, client
-from ..models import User, Post
+from ..models import User, Post,Class
 
 
 def send_request_to_peer(id_from, id_to):
