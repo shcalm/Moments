@@ -98,14 +98,14 @@ def confirm_enroll():
                 group_name=Class.query.filter_by(id=class_id).first().name
             )
             if result[u'code'] == 200: 
-                client.message_system_publish(
+                client.message_group_publish(
                     from_user_id=g.current_user.id,
                     to_group_id=class_id,
                     object_name='RC:ContactNtf',
-                    content=json.dumps({"message": "confirm"}),
+                    content=json.dumps({"message": "class_id"}),
                     push_content='confirm',
                     push_data='confirm',
-                    extra=class_id)
+                    )
                 return jsonify({
                     "status":200
                 })
