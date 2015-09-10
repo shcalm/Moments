@@ -307,6 +307,8 @@ class Class(db.Model):
             'portrait': self.portrait,
             'name': self.name,
             'introduce': self.introduce,
+            'number':self.number,
+            'max_number':self.max_number
         }
         return cls_json
 
