@@ -119,47 +119,37 @@ def add_friend():
             'message': 'not this class'
         })
 
-# class_id = request.form.get('class_id')
-#     userid = request.form.get('user_id')
-#     user = User.query.filter_by(id=userid).first()
-#     if user is not None:
-#         # sel = Class_User.select(Class_User.friend_id == user.id & Class_User.class_id == class_id)
-#         cls_usr = Class_User.query.filter_by(friend_id=userid, class_id=class_id).first()
-#         if cls_usr is None:
-#             cls_usr = Class_User(friend_id=userid, class_id=class_id)
-#             db.session.add(cls_usr)
-#             db.session.commit()
-
-#             result = client.group_join(
-#                 user_id_list=[userid],
-#                 group_id=class_id,
-#                 group_name=Class.query.filter_by(id=class_id).first().name
-#             )
-#             if result[u'code'] == 200: 
-#                 client.message_system_publish(
-#                     from_user_id=g.current_user.id,
-#                     to_group_id=class_id,
-#                     object_name='RC:ContactNtf',
-#                     content=json.dumps({"message": "confirm"}),
-#                     push_content='confirm',
-#                     push_data='confirm',
-#                     extra=class_id)
-#             else:
-#                 return jsonify({
-#                     "status": result[u'code'],
-#                 })
-#         else:
-#             return jsonify({
-#                 "status": 408,
-#                 "message": "has enroll in"
-#             })
-
 @api.route('/user/confirm',methods=['POST','GET'])
 def confirm_friend():
     userid = request.form.get('id')
     user = User.query.filter_by(id=userid).first()
     if user is not None:
-        pass
+        # if not in the friendlist
+        friend_info = Friend_List.query.filter_by(user_id=g.current_user.id, friend_id=userid).first()
+        if friend_info is None:
+            friend_list = Friend_List(user_id = g.current_user.id,friend_id=userid)
+            db.session.add(friend_list)
+            db.session.commit()
+
+            result = client.message_system_publish(
+                    from_user_id=g.current_user.id,
+                    to_user_id=userid,
+                    object_name='RC:ContactNtf',
+                    content=json.dumps({"message": "confirm","extra"=g.current_user.id}),
+                    push_content='confirm',
+                    push_data='confirm',
+                    )
+            return jsonify({
+                    'status':result[u'code']
+                })
+        else:
+            return jsonify({
+                    'status':408
+                })
+    else:
+        return jsonify({
+                    'status':404
+                })
     
     
 
