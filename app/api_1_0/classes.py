@@ -37,7 +37,7 @@ def search_class():
         })
     else:
         return jsonify({
-            'status': 401
+            'status': 404
         })
 
 
@@ -52,31 +52,16 @@ def enroll(id):
     if cls is not None:
         admin = cls.create_user_id
         result = send_request_to_admin(g.current_user.id, admin,id)
-        if result[u'code'] == 200:
-            return jsonify({
-                'status': 200,
-                'message': 'have send to admin'
-            })
-        else:
-            return jsonify({
-                'status': 400,
-                'message': 'send failed'
+        return jsonify({
+                'status': result[u'code']
+
             })
     else:
         return jsonify({
-            'status': 401,
+            'status': 404,
             'message': 'not this class'
         })
 
-        # sel = post_up.select((post_up.c.post_id == id) & (post_up.c.user_id ==g.current_user.username))
-        # rs = db.session.execute(sel).fetchall()
-        ## rs = sel.execute()
-        # if rs == []:
-        #     e = post_up.insert().values(post_id=id,user_id=g.current_user.username,timestamp=time)
-        #     db.session.execute(e)
-        # else:
-        #     e = post_up.delete().where(post_up.c.post_id==id and post_up.c.post_id==g.current_user.username)
-        #     db.session.execute(e)
 
 
 @api.route('/class/confirm', methods=['POST', 'GET'])
@@ -98,7 +83,7 @@ def confirm_enroll():
                 group_name=Class.query.filter_by(id=class_id).first().name
             )
             if result[u'code'] == 200: 
-                client.message_group_publish(
+                rel = client.message_group_publish(
                     from_user_id=g.current_user.id,
                     to_group_id=class_id,
                     object_name='RC:ContactNtf',
@@ -107,7 +92,7 @@ def confirm_enroll():
                     push_data='confirm',
                     )
                 return jsonify({
-                    "status":200
+                    "status":rel[u'code']
                 })
             else:
                 return jsonify({
@@ -131,9 +116,7 @@ def create_class():
     db.session.add(cls)
     db.session.commit()
 
-    cls_usr = Class_User(friend_id=g.current_user.id, class_id=cls.id)
-    db.session.add(cls_usr)
-    db.session.commit()
+    cls.add_user(g.current_user.id)
 
     result = client.group_create(
         user_id_list=[g.current_user.id],

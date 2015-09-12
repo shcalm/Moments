@@ -15,10 +15,11 @@ def get_index():
 @api.route('/posts/')
 def get_posts():
     page = request.args.get('page', 1, type=int)
+    classid = request.args.get('classid',1,type=int)
     per_page = current_app.config['FLASKY_POSTS_PER_PAGE']
     total = Post.query.count()
 
-    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
+    pagination = Post.query.filter_by(class_id = classid).order_by(Post.timestamp.desc()).paginate(
         page, per_page,error_out=False)
     posts = pagination.items
     showNum = len(posts)
@@ -42,6 +43,7 @@ def get_posts():
 
 
 
+
 @api.route('/posts/<int:id>')
 def get_post(id):
     post = Post.query.get_or_404(id)
@@ -52,7 +54,7 @@ def get_post(id):
 #@permission_required(Permission.WRITE_ARTICLES)
 def new_post():
     post = Post.from_json(request.json)
-    post.author = g.current_user
+    #post.author = g.current_user
     db.session.add(post)
     db.session.commit()
 

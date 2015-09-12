@@ -156,8 +156,30 @@ class User(UserMixin, db.Model):
             f = Friend_List(user_id=self.id, friend_id=user.id)
             db.session.add(f)
 
+            f2 =  Friend_List(friend_id=self.id, user_id=user.id)
+            db.session.add(f2)
+
+            return True
+        else:
+            return False
+
+
     def is_friend(self, user):
-        return self.friendlist.filter_by(friend_id=user.id).first() is not None
+        return user.id in self.getallmyfriend()
+
+    def getallmyfriend(self):
+        groupfriend = []
+        for c in self.classlist:
+            cls = Class.quer.filter_by(id=c.class_id).first()
+            if cls is not None:
+                for d in cls.classusers:
+                    groupfriend.append(d.friend_id)
+
+        for f in self.friendlist:
+            groupfriend.append(f.friend_id)
+
+        return groupfriend
+
 
     @staticmethod
     def verify_auth_token(token):
@@ -312,6 +334,11 @@ class Class(db.Model):
         }
         return cls_json
 
+    def add_user(self,id):
+        cls_usr = Class_User(friend_id=id, class_id=self.id)
+        db.session.add(cls_usr)
+        #db.session.commit()
+
 
 class PostImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -438,11 +465,12 @@ class Post(db.Model):
     def from_json(json_post):
         body = json_post.get('content')
         timestamp = json_post.get('sendtime')
+        classid = json_post.get('class_id')
         author_id = g.current_user.id
         if body is None or body == '':
             raise ValidationError('post does not have a body')
 
-        return Post(body=body, timestamp=timestamp, author_id=author_id)
+        return Post(body=body, timestamp=timestamp, author_id=author_id,class_id=classid)
 
 
 db.event.listen(Post.body, 'set', Post.on_changed_body)

@@ -2,7 +2,7 @@ import json
 from flask import jsonify, request, current_app, url_for, g
 from . import api
 from app import db, client
-from ..models import User, Post,Class
+from ..models import User, Post,Class, Friend_List
 
 
 def send_request_to_peer(id_from, id_to):
@@ -48,15 +48,19 @@ def get_user_posts(username):
     })
 
 
+
+#I divide the friendlist 2 pars 1 is own add friend,the other is user group list
 @api.route('/users/getmyfriends')
 def get_user_friends():
     
     user = g.current_user
+    groupfriend = user.getallmyfriend()
+
     if user is not None:
         return jsonify({
             'status': 200,
             'friend': [
-                f.id for f in user.friendlist
+                User.query.filter_by(id=f_id).first().to_json() for f_id in groupfriend
                 ]
         })
     else:
@@ -92,6 +96,7 @@ def search_user():
             user = User.query.filter(User.name.like("%" + name + "%")).first()
             if user is not None:
                 return user.to_json()
+
     return jsonify({
         'status': 404
     })
@@ -102,21 +107,21 @@ def add_friend():
     id = request.form.get('id')
     user = User.query.filter_by(id=id).first()
     if user is not None:
-        result = send_request_to_peer(g.current_user.id, id)
-        if result[u'code'] == 200:
+        isfriend = g.current_user.is_friend()
+        if isfriend == True:
+            result = send_request_to_peer(g.current_user.id, id)
             return jsonify({
-                'status': 200,
-                'message': 'have send to peer'
+                'status': result[u'code']
             })
         else:
             return jsonify({
-                'status': 400,
-                'message': 'send failed'
+                "status":408
             })
+
     else:
         return jsonify({
-            'status': 401,
-            'message': 'not this class'
+            'status': 404
+
         })
 
 @api.route('/user/confirm',methods=['POST','GET'])
@@ -125,26 +130,22 @@ def confirm_friend():
     user = User.query.filter_by(id=userid).first()
     if user is not None:
         # if not in the friendlist
-        friend_info = Friend_List.query.filter_by(user_id=g.current_user.id, friend_id=userid).first()
-        if friend_info is None:
-            friend_list = Friend_List(user_id = g.current_user.id,friend_id=userid)
-            db.session.add(friend_list)
-            db.session.commit()
+        if g.current_user.add_friend(user):
 
             result = client.message_system_publish(
                     from_user_id=g.current_user.id,
                     to_user_id=userid,
                     object_name='RC:ContactNtf',
-                    content=json.dumps({"message": "confirm","extra"=g.current_user.id}),
+                    content=json.dumps({"message": "confirm","extra":g.current_user.id}),
                     push_content='confirm',
-                    push_data='confirm',
+                    push_data='confirm'
                     )
             return jsonify({
                     'status':result[u'code']
                 })
         else:
             return jsonify({
-                    'status':408
+                    'status':408,
                 })
     else:
         return jsonify({
