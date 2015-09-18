@@ -21,22 +21,18 @@ def search_class():
     name = request.form.get('name')
     if id is not None:
         cls = Class.query.filter_by(id=id)
+        if cls is not None:
+            return cls.to_json()
     else:
         if name is not None:
-            cls = Class.query.filter(Class.name.like("%" + name + "%")).first()
-
-    user = g.current_user
-
-    if cls is not None:
-        return jsonify({
-            'id': cls.id,
-            'portrait': cls.portrait,
-            'name': cls.name,
-            'introduce': cls.introduce,
-            'status': 200
-        })
-    else:
-        return jsonify({
+            cls = Class.query.filter(Class.name.like("%" + name + "%")).all()
+            if cls is not None:
+                return jsonify({
+                   'classes':[
+                         c.to_json() for c in cls
+                   ]
+                }) 
+    return jsonify({
             'status': 404
         })
 

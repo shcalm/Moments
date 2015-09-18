@@ -91,11 +91,19 @@ def search_user():
     name = request.form.get('name')
     if id is not None:
         user = User.query.filter_by(id=id).first()
+        if user is not None:
+            return user.to_json()
     else:
         if name is not None:
-            user = User.query.filter(User.name.like("%" + name + "%")).first()
+            user = User.query.filter(User.username.like("%" + name + "%")).all()
             if user is not None:
-                return user.to_json()
+                #return user.to_json()
+                 return jsonify({'users':
+                     [
+                         u.to_json() for u in user
+                     ]
+                     }                  
+                 )
 
     return jsonify({
         'status': 404

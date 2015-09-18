@@ -170,7 +170,7 @@ class User(UserMixin, db.Model):
     def getallmyfriend(self):
         groupfriend = []
         for c in self.classlist:
-            cls = Class.quer.filter_by(id=c.class_id).first()
+            cls = Class.query.filter_by(id=c.class_id).first()
             if cls is not None:
                 for d in cls.classusers:
                     groupfriend.append(d.friend_id)
@@ -337,7 +337,7 @@ class Class(db.Model):
     def add_user(self,id):
         cls_usr = Class_User(friend_id=id, class_id=self.id)
         db.session.add(cls_usr)
-        #db.session.commit()
+        db.session.commit()
 
 
 class PostImage(db.Model):
