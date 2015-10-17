@@ -28,6 +28,7 @@ def search_class():
             cls = Class.query.filter(Class.name.like("%" + name + "%")).all()
             if cls is not None:
                 return jsonify({
+                    'status':200,
                    'classes':[
                          c.to_json() for c in cls
                    ]
@@ -78,7 +79,11 @@ def confirm_enroll():
                 group_id=class_id,
                 group_name=Class.query.filter_by(id=class_id).first().name
             )
+            
             if result[u'code'] == 200: 
+                cls = Class.query.filter_by(id = class_id).first()
+                cls.increase_number()
+                
                 rel = client.message_group_publish(
                     from_user_id=g.current_user.id,
                     to_group_id=class_id,
@@ -107,15 +112,21 @@ def confirm_enroll():
 
 @api.route('/class/create', methods=['POST', 'GET'])
 def create_class():
+    user = g.current_user
+    # admin_id = Role.query.filter_by(name='Administrator').first().id
+    # if user.role_id != admin_id:
+    #     return jsonify({
+    #         "status":408
+    #     })
     data = request.form
     cls = Class.from_form(data)
     db.session.add(cls)
     db.session.commit()
 
-    cls.add_user(g.current_user.id)
+    cls.add_user(user.id)
 
     result = client.group_create(
-        user_id_list=[g.current_user.id],
+        user_id_list=[user.id],
         group_id=cls.id,
         group_name=cls.name
     )

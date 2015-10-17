@@ -3,16 +3,16 @@ from flask import jsonify, request, current_app, url_for, g
 from . import api
 from app import db, client
 from ..models import User, Post,Class, Friend_List
-
+import logging
 
 def send_request_to_peer(id_from, id_to):
     return client.message_system_publish(
         from_user_id=id_from,
         to_user_id=id_to,
         object_name='RC:ContactNtf',
-        content=json.dumps({"content": "send request", 'id': id_from}),
-        push_content='send add request',
-        push_data='send add request')
+        content=json.dumps({"message": "send request", "sourceUserId":id_from,"targetUserId":id_to}),
+        push_content='send add friend request',
+        push_data='send add friend request')
 
 
 @api.route('/users/<id>')
@@ -98,7 +98,9 @@ def search_user():
             user = User.query.filter(User.username.like("%" + name + "%")).all()
             if user is not None:
                 #return user.to_json()
-                 return jsonify({'users':
+                 return jsonify({
+                     'status':200,
+                     'users':
                      [
                          u.to_json() for u in user
                      ]
@@ -113,10 +115,13 @@ def search_user():
 @api.route('/users/addfriend', methods=['POST', 'GET'])
 def add_friend():
     id = request.form.get('id')
+    print id
+    logging.error(id)
     user = User.query.filter_by(id=id).first()
+    logging.error(user)
     if user is not None:
-        isfriend = g.current_user.is_friend()
-        if isfriend == True:
+        isfriend = g.current_user.is_friend(user)
+        if isfriend == False:
             result = send_request_to_peer(g.current_user.id, id)
             return jsonify({
                 'status': result[u'code']
@@ -144,7 +149,7 @@ def confirm_friend():
                     from_user_id=g.current_user.id,
                     to_user_id=userid,
                     object_name='RC:ContactNtf',
-                    content=json.dumps({"message": "confirm","extra":g.current_user.id}),
+                    content=json.dumps({"message": "confirm","sourceUserId":g.current_user.id,"targetUserId":userid}),
                     push_content='confirm',
                     push_data='confirm'
                     )

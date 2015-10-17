@@ -118,6 +118,7 @@ class User(UserMixin, db.Model):
             return False
         self.password = new_password
         db.session.add(self)
+        db.session.commit()
         return True
 
     def generate_email_change_token(self, new_email, expiration=3600):
@@ -141,6 +142,7 @@ class User(UserMixin, db.Model):
         self.portrait = hashlib.md5(
             self.email.encode('utf-8')).hexdigest()
         db.session.add(self)
+        db.session.commit()
         return True
 
     def gravatar(self, size=100, default='identicon', rating='g'):
@@ -158,7 +160,8 @@ class User(UserMixin, db.Model):
 
             f2 =  Friend_List(friend_id=self.id, user_id=user.id)
             db.session.add(f2)
-
+            
+            db.session.commit()
             return True
         else:
             return False
@@ -299,6 +302,12 @@ class Class(db.Model):
                                  backref=db.backref('beclass', lazy='joined'), lazy='dynamic',
                                  cascade='all,delete-orphan')  # order_by="post_up.columns['timestamp']"
 
+    def increase_number(self):
+        self.number = self.number + 1
+        db.session.add(self)
+        db.session.commit()
+        
+        
     @staticmethod
     def from_json(json_data):
         name = json_data.get('name')
@@ -396,7 +405,8 @@ class Comment(db.Model):
             raise ValidationError('comment does not have a body')
         author_id = g.current_user.id
         replyname = json_comment.get('isReplyName')
-        return Comment(body=body, author_id=author_id, replyname=replyname)
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        return Comment(body=body, author_id=author_id, replyname=replyname,timestamp= timestamp)
 
 
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)
@@ -455,7 +465,7 @@ class Post(db.Model):
                 c.to_json() for c in self.comments
                 ],
             'friendpraise': [
-                up.user_id for up in self.ups
+                up.id for up in self.ups
                 ]
 
         }
@@ -465,6 +475,8 @@ class Post(db.Model):
     def from_json(json_post):
         body = json_post.get('content')
         timestamp = json_post.get('sendtime')
+        if timestamp is None:
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         classid = json_post.get('class_id')
         author_id = g.current_user.id
         if body is None or body == '':

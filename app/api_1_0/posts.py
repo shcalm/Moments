@@ -91,14 +91,15 @@ def post_praise(id):
         time = request.json.get('timestamp')
     else:
         time = datetime.now().strftime('%Y-%m-%d %H:%M')
-    sel = post_up.select((post_up.c.post_id == id) & (post_up.c.user_id ==g.current_user.username))
+
+    sel = post_up.select((post_up.c.post_id == id) & (post_up.c.user_id ==g.current_user.id))
     rs = db.session.execute(sel).fetchall()
    # rs = sel.execute()
     if rs == []:
-        e = post_up.insert().values(post_id=id,user_id=g.current_user.username,timestamp=time)
+        e = post_up.insert().values(post_id=id,user_id=g.current_user.id,timestamp=time)
         db.session.execute(e)
     else:
-        e = post_up.delete().where(post_up.c.post_id==id and post_up.c.post_id==g.current_user.username)
+        e = post_up.delete().where(post_up.c.post_id==id and post_up.c.post_id==g.current_user.id)
         db.session.execute(e)
     return jsonify({
         "status":200

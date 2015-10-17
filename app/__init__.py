@@ -5,7 +5,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from app.rongcloud.rong import ApiClient
 from config import config
 from flask.ext.pagedown import PageDown
-
+import logging
 db = SQLAlchemy()
 pagedown = PageDown()
 mail = Mail()
@@ -21,7 +21,7 @@ def create_app(confi):
     app.config.from_object(config[confi])
     db.init_app(app)
     pagedown.init_app(app)
-
+    logging.error('starting kchat')
     from api_1_0 import api as api_1_0_blueprint
     app.register_blueprint(api_1_0_blueprint,url_prefix='/api/v1.0')
 
