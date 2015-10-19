@@ -65,6 +65,8 @@ class User(UserMixin, db.Model):
     createdTime = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
     portrait = db.Column(db.String(128))
+    default_cls = db.Column(db.Integer,default=0)
+    
     posts = db.relationship('Post', backref='author', lazy='dynamic')
 
     # comments = db.relationship('Comment', backref='author', lazy='dynamic')
@@ -232,7 +234,8 @@ class User(UserMixin, db.Model):
             "email": self.email,
             "username": self.username,
             "name": self.name,
-            "portrait": self.portrait
+            "portrait": self.portrait,
+            "default_cls":self.default_cls
         }
         return json_user
 
@@ -452,24 +455,26 @@ class Post(db.Model):
         #                        _external=True),
         #    'comment_count': self.comments.count()
         # }
-        new_josn_post = {
-            'id': self.id,
-            'content': self.body,
-            'uname': self.author_id,
-            'sendtime': self.timestamp.strftime('%Y-%m-%d %H:%M'),
-            'usericon': None,
-            'urls': [
-                img.img_md5 for img in self.imgs
-                ],
-            'friendcomment': [
-                c.to_json() for c in self.comments
-                ],
-            'friendpraise': [
-                up.id for up in self.ups
-                ]
-
-        }
-        return new_josn_post
+        user = User.query.filter_by(id=self.author_id).first()
+        if user is not None:
+            new_json_post = {
+                'id': self.id,
+                'content': self.body,
+                'uname': user.username,
+                'sendtime': self.timestamp.strftime('%Y-%m-%d %H:%M'),
+                'usericon': user.portrait,
+                'urls': [
+                    img.img_md5 for img in self.imgs
+                    ],
+                'friendcomment': [
+                    c.to_json() for c in self.comments
+                    ],
+                'friendpraise': [
+                    up.id for up in self.ups
+                    ]
+    
+            }
+            return new_json_post
 
     @staticmethod
     def from_json(json_post):

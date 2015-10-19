@@ -68,6 +68,34 @@ def get_user_friends():
             'status': 404
         })
 
+@api.route('/users/getdefaultgroup')
+def get_user_default_group():
+    user = g.current_user
+    if user is not None:
+        return jsonify({
+            "status":200,
+            "defaultclass":user.default_cls
+            })
+    else:
+        return jsonify({
+            "status":400
+        })
+@api.route('/users/setdefaultgroup',methods=['POST'])
+def set_user_default_group():
+    default = request.form.get('defaultclass')
+    user = g.current_user
+    if user is not None and default > 0:
+        user.default_cls = default
+        db.session.add(user)
+        db.session.commit()
+
+        return jsonify({
+            "status": 200
+        })
+    else:
+        return jsonify({
+            "status": 400
+        })
 
 @api.route('/users/getmygroups')
 def get_user_groups():
