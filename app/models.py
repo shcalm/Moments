@@ -149,7 +149,13 @@ class User(UserMixin, db.Model):
 
     def gravatar(self, size=100, default='identicon', rating='g'):
         pass
-
+        
+    def change_portrait(self,new_portrait):
+        self.portrait = new_portrait
+        db.session.add(self)
+        db.session.commit()
+        return True
+        
     def generate_auth_token(self, expiration):
         s = Serializer(current_app.config['SECRET_KEY'],
                        expires_in=expiration)
@@ -218,6 +224,7 @@ class User(UserMixin, db.Model):
         username = form.get('username')
         password = form.get('password')
         mobile = form.get('mobile')
+        name = form.get('name',default=username)
         role = form.get("role", default='User')
         if role is None:
             role_id = Role.query.filter_by(name='User').first().id
@@ -226,7 +233,7 @@ class User(UserMixin, db.Model):
 
         avatar = form.get("avatar", default='https://avatars2.githubusercontent.com/u/1171281?v=3&s=460')
 
-        return User(email=email, username=username, password=password, mobile=mobile, role_id=role_id, portrait=avatar)
+        return User(email=email, username=username, password=password, mobile=mobile, role_id=role_id, portrait=avatar,name=name)
 
     def to_json(self):
         json_user = {

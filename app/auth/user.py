@@ -46,12 +46,12 @@ def email_login():
                 )
             return jsonify({
                 'result': '200',
-                'id': user.id
+                'user':user.to_json()
             })
 
     return jsonify({
-        'result': '401',
-    })
+        'result': '401'
+        })
 
 
 @auth.route('/username_login', methods=['POST', 'GET'])
@@ -74,11 +74,11 @@ def username_login():
                 )
             return jsonify({
                 'result': '200',
-                'id': user.id
+                'user': user.to_json()
             })
 
     return jsonify({
-        'result': '401',
+        'result': '401'
     })
 
 

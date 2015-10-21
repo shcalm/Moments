@@ -96,7 +96,20 @@ def set_user_default_group():
         return jsonify({
             "status": 400
         })
-
+@api.route('/users/changeportrait',methods=['POST'])
+def chanage_portrait():
+    new_portrait = request.form.get('portrait')
+    user = g.current_user
+    if user is not None :
+        #user.portrait = new_portrait
+        user.change_portrait(new_portrait)
+        return jsonify({
+            "status":200
+        })
+    return jsonify({
+        "status":400
+    })
+    
 @api.route('/users/getmygroups')
 def get_user_groups():
     user = g.current_user
