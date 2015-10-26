@@ -15,9 +15,13 @@ def get_index():
 @api.route('/posts/')
 def get_posts():
     page = request.args.get('page', 1, type=int)
-    classid = request.args.get('classid',1,type=int)
+    classid = request.args.get('classid',-1,type=int)
     per_page = current_app.config['FLASKY_POSTS_PER_PAGE']
     total = Post.query.count()
+    if classid < 0:
+        return jsonify({
+            "status":400
+        })
 
     pagination = Post.query.filter_by(class_id = classid).order_by(Post.timestamp.desc()).paginate(
         page, per_page,error_out=False)

@@ -399,11 +399,18 @@ class Comment(db.Model):
         #    'author': url_for('api.get_user', id=self.author_id,
         #                      _external=True),
         # }
+        author = User.query.filter_by(id=self.author_id).first()
+        if author is not None:
+            reply_name = author.username
+        replyname = User.query.filter_by(id = self.replyname).first()
+        isreplyname = None
+        if replyname is not None:
+            isreplyname = replyname.username
 
         new_json_comment = {
             'replyId': self.id,
-            'replyName': self.author_id,
-            'isReplyName': self.replyname,
+            'replyName': reply_name,
+            'isReplyName': isreplyname,
             'comment': self.body
         }
         return new_json_comment

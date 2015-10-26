@@ -16,7 +16,7 @@ def send_request_to_peer(id_from, id_to):
 
 
 @api.route('/users/<id>')
-def get_user(username):
+def get_user(id):
     user = User.query.filter_by(id=id).first()
     if user is not None:
         return jsonify(user.to_json())
