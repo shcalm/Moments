@@ -5,14 +5,17 @@ from app.api_1_0 import api
 from app.models import Comment, Class, User, Class_User
 
 
-def send_request_to_admin(id_from, id_to,classid):
+def send_request_to_admin(id_from, id_to,classid,pushcontent):
+    if pushcontent is None :
+        pushcontent = 'send enroll request'
+        
     return client.message_system_publish(
         from_user_id=id_from,
         to_user_id=id_to,
         object_name='RC:ContactNtf',
         content=json.dumps({"message": "send request", "sourceUserId":id_from,"targetUserId":id_to,"operation":"add","extra":classid}),
-        push_content='send enroll request',
-        push_data='send enroll request')
+        push_content= pushcontent,
+        push_data= pushcontent)
 
 
 @api.route('/class/search', methods=['POST', 'GET'])
@@ -46,9 +49,10 @@ def get_class(id):
 @api.route('/class/enroll/<id>', methods=['POST', 'GET'])
 def enroll(id):
     cls = Class.query.filter_by(id=id).first()
+    pushcontent = request.form.get('content')
     if cls is not None:
         admin = cls.create_user_id
-        result = send_request_to_admin(g.current_user.id, admin,id)
+        result = send_request_to_admin(g.current_user.id, admin,id,pushcontent)
         return jsonify({
                 'status': result[u'code']
 
@@ -119,6 +123,13 @@ def create_class():
     #         "status":408
     #     })
     data = request.form
+    name = data.get('name')
+    tmp = Class.query.filter_by(name=name).first()
+    if tmp is not None:
+        return jsonify({
+            "status":400
+        })
+     
     cls = Class.from_form(data)
     db.session.add(cls)
     db.session.commit()

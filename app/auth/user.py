@@ -1,4 +1,5 @@
 import json
+import logging
 from flask import request, jsonify, g
 from flask_httpauth import HTTPBasicAuth
 from .. import db, client
@@ -58,7 +59,7 @@ def email_login():
 def username_login():
     name = request.form.get('username')
     password = request.form.get('password')
-
+    logging.error('username_login name=%s,password=%s' %(name,password))
     user = User.query.filter_by(username=name).first()
     if user is not None:
         if user.verify_password(password):
