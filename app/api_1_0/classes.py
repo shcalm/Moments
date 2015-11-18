@@ -13,7 +13,7 @@ def send_request_to_admin(id_from, id_to,classid,pushcontent):
         from_user_id=id_from,
         to_user_id=id_to,
         object_name='RC:ContactNtf',
-        content=json.dumps({"message": "send request", "sourceUserId":id_from,"targetUserId":id_to,"operation":"add","extra":classid}),
+        content=json.dumps({"message": "加入班级请求：" + pushcontent, "sourceUserId":id_from,"targetUserId":id_to,"operation":"add","extra":classid}),
         push_content= pushcontent,
         push_data= pushcontent)
 
