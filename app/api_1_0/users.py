@@ -6,12 +6,12 @@ from app import db, client
 from ..models import User, Post,Class, Friend_List
 import logging
 
-def send_request_to_peer(id_from, id_to):
+def send_request_to_peer(id_from, id_to, pushcontent):
     return client.message_system_publish(
         from_user_id=id_from,
         to_user_id=id_to,
         object_name='RC:ContactNtf',
-        content=json.dumps({"message": u"好友请求：", "sourceUserId":id_from,"targetUserId":id_to}),
+        content=json.dumps({"message": u"好友请求：" + pushcontent, "sourceUserId":id_from,"targetUserId":id_to}),
         push_content='send add friend request',
         push_data='send add friend request')
 
@@ -157,6 +157,7 @@ def search_user():
 @api.route('/users/addfriend', methods=['POST', 'GET'])
 def add_friend():
     id = request.form.get('id')
+    pushcontent = request.form.get('content')
     print id
     logging.error(id)
     user = User.query.filter_by(id=id).first()
@@ -164,7 +165,7 @@ def add_friend():
     if user is not None:
         isfriend = g.current_user.is_friend(user)
         if isfriend == False:
-            result = send_request_to_peer(g.current_user.id, id)
+            result = send_request_to_peer(g.current_user.id, id, pushcontent)
             return jsonify({
                 'status': result[u'code']
             })
