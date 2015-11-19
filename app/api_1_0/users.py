@@ -11,7 +11,7 @@ def send_request_to_peer(id_from, id_to):
         from_user_id=id_from,
         to_user_id=id_to,
         object_name='RC:ContactNtf',
-        content=json.dumps({"message": "好友请求：", "sourceUserId":id_from,"targetUserId":id_to}),
+        content=json.dumps({"message": u"好友请求：", "sourceUserId":id_from,"targetUserId":id_to}),
         push_content='send add friend request',
         push_data='send add friend request')
 
