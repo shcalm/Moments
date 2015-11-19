@@ -191,7 +191,7 @@ def confirm_friend():
                     from_user_id=g.current_user.id,
                     to_user_id=userid,
                     object_name='RC:ContactNtf',
-                    content=json.dumps({"message": "confirm","sourceUserId":g.current_user.id,"targetUserId":userid}),
+                    content=json.dumps({"message": u"已成功添加为好友", "sourceUserId":g.current_user.id,"targetUserId":userid}),
                     push_content='confirm',
                     push_data='confirm'
                     )
