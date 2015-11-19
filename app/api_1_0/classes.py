@@ -93,7 +93,7 @@ def confirm_enroll():
                     from_user_id=g.current_user.id,
                     to_group_id=class_id,
                     object_name='RC:ContactNtf',
-                    content=json.dumps({"message": u"已成功加入到班级"}),
+                    content=json.dumps({"message": user.username + u"已成功加入到班级"}),
                     push_content='confirm',
                     push_data='confirm',
                     )
