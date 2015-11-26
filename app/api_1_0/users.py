@@ -157,9 +157,7 @@ def search_user():
 @api.route('/users/addfriend', methods=['POST', 'GET'])
 def add_friend():
     id = request.form.get('id')
-    pushcontent = request.form.get('content')
-    print id
-    logging.error(id)
+    pushcontent = request.form.get('content',default=u'')
     user = User.query.filter_by(id=id).first()
     logging.error(user)
     if user is not None:
